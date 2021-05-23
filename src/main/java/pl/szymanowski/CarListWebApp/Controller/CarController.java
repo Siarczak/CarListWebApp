@@ -8,7 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import pl.szymanowski.CarListWebApp.Repository.Car;
 import pl.szymanowski.CarListWebApp.Repository.Color;
-import pl.szymanowski.CarListWebApp.Service.CarService;
+import pl.szymanowski.CarListWebApp.Service.CarServiceImp;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,15 +17,13 @@ import java.util.Optional;
 @RequestMapping("/cars")
 public class CarController {
 
-    CarService carService;
+    CarServiceImp carServiceImp;
 
     @Autowired
-    public CarController(CarService carService)
-    {
-        this.carService = carService;
+    public CarController(CarServiceImp carServiceImp) {
+        this.carServiceImp = carServiceImp;
 
     }
-
 
 
     @GetMapping(produces =
@@ -33,19 +31,16 @@ public class CarController {
                     MediaType.APPLICATION_XML_VALUE,
                     MediaType.APPLICATION_JSON_VALUE
             }
-            )
-    public ResponseEntity<List<Car>> getCars(){
-if(carService.getCars().isEmpty())
-{
-    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    )
+    public ResponseEntity<List<Car>> getCars() {
+        if (carServiceImp.getCars().isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
 
-}
-else
-{
-    return new ResponseEntity<>(carService.getCars(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(carServiceImp.getCars(), HttpStatus.OK);
 
-}
+        }
 
 
     }
@@ -55,111 +50,76 @@ else
                     MediaType.APPLICATION_XML_VALUE,
                     MediaType.APPLICATION_JSON_VALUE
             })
-    public ResponseEntity<Car>getCarById(@PathVariable long id)
-    {
-        Optional<Car> carToModify = carService.getCars().stream()
+    public ResponseEntity<Car> getCarById(@PathVariable long id) {
+        Optional<Car> carToModify = carServiceImp.getCars().stream()
                 .filter(car1 -> car1.getId() == id)
                 .findFirst();
 
-        if(carToModify.isPresent())
-        {
+        if (carToModify.isPresent()) {
 
-            return new ResponseEntity<>(carService.getCarById(id), HttpStatus.CREATED);
+            return new ResponseEntity<>(carServiceImp.getCarById(id), HttpStatus.CREATED);
 
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        else
-        {
-            return new ResponseEntity<>( HttpStatus.NOT_FOUND);
-        }
-
 
 
     }
 
     @PostMapping
-    public ResponseEntity<Car> addCar(@RequestBody Car car)
-    {
+    public ResponseEntity<Car> addCar(@RequestBody Car car) {
 
-        if(car != null)
-        {
+        if (car != null) {
 
-            return new ResponseEntity<>(carService.addCar(car), HttpStatus.CREATED);
+            return new ResponseEntity<>(carServiceImp.addCar(car), HttpStatus.CREATED);
 
-        }
-        else
-        {
-            return new ResponseEntity<>( HttpStatus.NO_CONTENT);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
 
     }
-@PutMapping(value = "/{id}")
-    public ResponseEntity<Car> modifyCar(@RequestBody Car car)
-    {
 
-        Optional<Car> carToModify = carService.getCars().stream()
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<Car> modifyCar(@RequestBody Car car) {
+
+        Optional<Car> carToModify = carServiceImp.getCars().stream()
                 .filter(car1 -> car1.getId() == car.getId())
                 .findFirst();
 
-        if(carToModify.isPresent())
-        {
-            return new ResponseEntity<>(carService.modCar(car), HttpStatus.CREATED);
+        if (carToModify.isPresent()) {
+            return new ResponseEntity<>(carServiceImp.modCar(car), HttpStatus.CREATED);
 
-        }
-        else
-        {
-            return new ResponseEntity<>( HttpStatus.NO_CONTENT);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
     }
 
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Car> posInCarToModyfy(@RequestBody Car newCar, @PathVariable long id)
-    {
-
-        Optional<Car> findPosToModyfy = carService.getCars().stream()
-                .filter(car -> car.getId() == id)
-                .findFirst();
-
-        if(findPosToModyfy.isPresent())
-        {
-            if(newCar.getModel() !=  null)
-            {
-                findPosToModyfy.get().setModel(newCar.getModel());
-                return new ResponseEntity<>(HttpStatus.OK);
-
-            }
-            else if(newCar.getColor() != null)
-            {
-                findPosToModyfy.get().setColor(newCar.getColor());
-                return new ResponseEntity<>(HttpStatus.OK);
-
-            }
-            else if(newCar.getBrand() != null)
-            {
-                findPosToModyfy.get().setBrand(newCar.getBrand());
-                return new ResponseEntity<>(HttpStatus.OK);
-            }
+    public ResponseEntity<Car> posInCarToModyfy(@RequestBody Car newCar, @PathVariable long id) {
 
 
+        if (carServiceImp.modPositionInCar(newCar, id) != null) {
 
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } else {
+
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
     }
 
     @DeleteMapping(path = "{/id}")
-     public ResponseEntity<Car> deleteCar(Car car)
-    {
-        Optional<Car> carToRemove = carService.getCars().stream()
+    public ResponseEntity<Car> deleteCar(Car car) {
+        Optional<Car> carToRemove = carServiceImp.getCars().stream()
                 .filter(car1 -> car1.getId() == car.getId())
                 .findFirst();
 
-        if(carToRemove.isPresent())
-        {
-            carService.deleteCar(car);
+        if (carToRemove.isPresent()) {
+            carServiceImp.deleteCar(car);
             return new ResponseEntity<>(HttpStatus.GONE);
 
-        } else
-        {
+        } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
         }
@@ -167,135 +127,20 @@ else
     }
 
     @GetMapping("/color/{color}")
-    public ResponseEntity<List<Car>> carsByColor(@PathVariable Color color)
-    {
-        carService.carsByColor(color);
+    public ResponseEntity<List<Car>> carsByColor(@PathVariable Color color) {
+        carServiceImp.carsByColor(color);
 
-        if(color != null)
-        {
-           return  new ResponseEntity<>(carService.carsByColor(color), HttpStatus.OK);
-        }
-        else
-        {
+        if (color != null) {
+            return new ResponseEntity<>(carServiceImp.carsByColor(color), HttpStatus.OK);
+        } else {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
 
         }
 
-
     }
 
-//    public  ResponseEntity<Car> deleteCar(@PathVariable long id)
-//    {
-//        Optional<Car> findCarToDelete = listOfCars.stream()
-//                .filter(car -> car.getId() == id )
-//                .findFirst();
-//
-//        if(findCarToDelete.isPresent())
-//        {
-//            listOfCars.remove(findCarToDelete);
-//            return new ResponseEntity<>(HttpStatus.GONE);
-//
-//        }
-//        else
-//        {
-//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//
-//        }
-//
-//    }
 
-
-
-//    @PatchMapping("/{id}")
-//    ResponseEntity<Car> ColorInCarToModyfy(@RequestBody Car newCar, @PathVariable long id)
-//    {
-//
-//        Optional<Car> findPosToModify =  carService.getCars().stream()
-//                .filter(car -> car.getId() == id)
-//                .findFirst();
-//
-//        if(findPosToModify.isPresent()) {
-//
-//
-//            findPosToModify.get().setColor(newCar.getColor());
-//            findPosToModify.get().setModel(newCar.getModel());
-//            return new ResponseEntity<>(HttpStatus.OK);
-//        }
-//
-//        else
-//        {
-//
-//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//
-//        }
-//    }
-//
-//    @PatchMapping("/{id}")
-//    ResponseEntity<Car> ModelInCarToModyfy(@RequestBody Car newCar, @PathVariable long id)
-//    {
-//
-//        Optional<Car> findPosToModify =  carService.getCars().stream()
-//                .filter(car -> car.getId() == id)
-//                .findFirst();
-//
-//        if(findPosToModify.isPresent()) {
-//
-//            findPosToModify.get().setModel(newCar.getModel());
-//            return new ResponseEntity<>(HttpStatus.OK);
-//        }
-//
-//        else
-//        {
-//
-//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//
-//        }
-//    }
-
-
-
-//        @PutMapping("/{id}")
-//        public ResponseEntity modifyCarParameter(@PathVariable long id, @RequestParam Optional<String> newMark,
-//        @RequestParam Optional<String> newColor, @RequestParam Optional<String> newModel) {
-//        Optional<Car> first = carsList.stream().filter(car -> car.getId() == id).findFirst();
-//        if (first.isPresent()) {
-//            first.get().setMark(newMark.orElseGet(() -> first.get().getMark()));
-//            first.get().setColor(newColor.orElseGet(() -> first.get().getColor()));
-//            first.get().setModel(newModel.orElseGet(() -> first.get().getModel()));
-//            return new ResponseEntity(HttpStatus.OK);
-//        }
-//        return new ResponseEntity(HttpStatus.NOT_FOUND);
-
-
-
-
-//        if(findPosToModyfy.isPresent())
-//        {
-//          if(newCar.getModel() !=  null)
-//          {
-//
-//
-//              findPosToModyfy.get().setModel(newCar.getModel());
-//              return new ResponseEntity<>(HttpStatus.OK);
-//
-//          }
-//          else if(newCar.getColor() != null)
-//          {
-//              findPosToModyfy.get().setColor(newCar.getColor());
-//              return new ResponseEntity<>(HttpStatus.OK);
-//
-//          }
-//          else if(newCar.getBrand() != null)
-//            {
-//                findPosToModyfy.get().setBrand(newCar.getBrand());
-//                return new ResponseEntity<>(HttpStatus.OK);
-//            }
-
-
-
-
-
-    }
+}
 
 
 

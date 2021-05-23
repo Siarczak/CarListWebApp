@@ -2,8 +2,7 @@ package pl.szymanowski.CarListWebApp.Repository;
 
 import javax.validation.constraints.NotNull;
 
-public class Car  {
-
+public class Car {
 
 
     private long id;
@@ -56,14 +55,4 @@ public class Car  {
         this.color = color;
     }
 
-
-    @Override
-    public String toString() {
-        return "Car{" +
-                "id=" + id +
-                ", brand='" + brand + '\'' +
-                ", model='" + model + '\'' +
-                ", color=" + color +
-                '}';
-    }
 }
